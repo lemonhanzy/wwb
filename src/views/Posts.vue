@@ -187,11 +187,9 @@ function handleScroll(e) {
   }, options); // 将需要观察的目标元素传入 IntersectionObserver 实例
   io.observe(lazyLoad);
 }
-console.log();
 
 //加载
 onMounted(() => {
-  // getBlogAll();
   window.addEventListener("scroll", handleScroll);
   axios.get("/love/getLove").then((res) => {
     obj.loves = res.data.data;

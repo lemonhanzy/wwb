@@ -43,6 +43,7 @@
           class="post-container"
           v-for="(item, index) in obj.bloglist"
           :key="item.bid"
+          :id="item.bid + '_posts'"
         >
           <div class="header">
             <div :class="['avatar', item.user.isVip ? 'vip' : '']">
@@ -284,8 +285,14 @@ function changeUser(){
 function getBlogAll() {
   obj.uid=route.query.id
   axios
-    .get(
-      "/blog/getBlogByUid/"+obj.uid,
+    .post(
+      "/blog/getAll",
+      {
+        num: obj.num,
+        keyword: obj.keyword,
+        uid:obj.uid
+      },
+      { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
     )
     .then((res) => {
       if (res.data.data.length == 0) {
@@ -306,9 +313,7 @@ function getBlogAll() {
             }
           });
           obj.imgs = [...new Set(obj.imgs)];
-          
           }
-          
         });
       }
     });
@@ -317,22 +322,35 @@ onBeforeUnmount(() => {
   window.removeEventListener("scroll", handleScroll);
 });
 function handleScroll(e) {
-  // 在滚动时执行的操作
-  // 可见窗口高度
-  const windowHeight = window.innerHeight; // 滚动条滚动的距离
-  const scrollY = window.scrollY; // 页面的总高度
-  const scrollHeight = document.body.scrollHeight; // 计算滚动条距离底部的距离
-  const distanceToBottom = scrollHeight - windowHeight - scrollY;
-  if (distanceToBottom <= 1) {
-    obj.num += 3;
-    obj.flag = true;
-  }
+  let lazyLoad = document.getElementById(
+    `${obj.bloglist[obj.bloglist.length - 1].bid}_posts`
+  );
+  const options = {
+    root: null, // 根元素，如果为 null 则为 viewport
+    rootMargin: "30px",
+    threshold: 1.0,
+  };
+  const io = new IntersectionObserver((entries, observer) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        // 目标元素进入视口时的处理逻辑
+        if (!obj.hasIntersected) {
+          obj.hasIntersected = true;
+          console.log(1);
+          obj.num += 3;
+          setTimeout(() => getBlogAll(), 500);
+        }
+      } else {
+        obj.hasIntersected = false;
+      }
+    });
+  }, options); // 将需要观察的目标元素传入 IntersectionObserver 实例
+  io.observe(lazyLoad);
 }
 
 //加载
 onMounted(() => {
   obj.uid=route.query.id
-  getBlogAll();
   window.addEventListener("scroll", handleScroll);
   axios.get("/love/getLove").then((res) => {
     obj.loves = res.data.data;
@@ -362,7 +380,6 @@ onMounted(() => {
 });
 //监听
 watch(
-  () => obj.num,
   () => {
     setTimeout(() => getBlogAll(), 200);
   }
@@ -407,25 +424,25 @@ const timeFormat = computed(
   () => (date) => dayjs(date).format("YYYY年MM月DD日 HH:mm")
 );
 //组件传参
-emitter.on("on-button-click", (e) => {
-  if (e) {
-    obj.keyword = e;
-    console.log(obj.keyword);
-    axios
-      .post(
-        "/blog/getAll",
-        {
-          num: obj.keyword == 1 ? 0 : obj.num,
-          keyword: obj.keyword == 1 ? "" : obj.keyword,
-        },
-        { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
-      )
-      .then((res) => {
-        console.log(res);
-        obj.bloglist = res.data.data;
-      });
-  }
-});
+// emitter.on("on-button-click", (e) => {
+//   if (e) {
+//     obj.keyword = e;
+//     console.log(obj.keyword);
+//     axios
+//       .post(
+//         "/blog/getAll",
+//         {
+//           num: obj.keyword == 1 ? 0 : obj.num,
+//           keyword: obj.keyword == 1 ? "" : obj.keyword,
+//         },
+//         { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
+//       )
+//       .then((res) => {
+//         console.log(res);
+//         obj.bloglist = res.data.data;
+//       });
+//   }
+// });
 function checkImg() {
   let img = event.target;
   var rect = img.getBoundingClientRect();
