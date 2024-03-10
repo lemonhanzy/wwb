@@ -1,0 +1,57 @@
+.vip{
+    position: relative;
+}
+.vip::before {
+    display: block;
+    text-align: center;
+    content: "V";
+    color: gold;
+    font-size: 10px;
+    padding: 0 3.3px;
+    /* display: block; */
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    border-radius: 50px;
+    background-color: red;
+  }
+
+  .colortxt {
+    height: 30px;
+    font-size: 25px;
+    background: linear-gradient(to right, red, blue);
+    -webkit-background-clip: text;
+    color: transparent;
+  }
+  .text {
+    height: 30px;
+    animation-delay: 0s;
+    /* text-shadow: 0 0 0 #444; */
+    position: relative;
+    animation: start 1s ease-in-out infinite alternate;
+    /* font-size: 38px; */
+  }
+  
+  @keyframes start {
+    to {
+      text-shadow: 0 0 5px #fff, 0 0 5px #fff, 0 0 10px #fff, 0 0 18px #126fcc,
+        0 0 20px #126fcc, 0 0 40px #126fcc;
+      color: #fff;
+    }
+  }
+  .text::before {
+    content: "";
+    height: 1px;
+    background: red;
+    /* 伪元素默认样式 display: inline;所以需要转成inline-block宽高才会生效 */
+    display: inline-block;
+    /* 通过定位使下划线在最低层 */
+    position: absolute;
+    bottom: -6px;
+    width: 0;
+    /* 加上一个过渡效果，使之丝滑一些 */
+    transition: width 0.36s;
+  }
+  .text:hover::before {
+    width: 50%;
+  }
