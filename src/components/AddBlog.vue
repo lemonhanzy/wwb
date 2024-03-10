@@ -1,5 +1,5 @@
 <template>
-  <div :class="['add_blog_box', obj.isShow ? 'run' : '']">
+  <div class="add_blog_box">
     <div
       class="box tr_Y"
       style="
@@ -18,9 +18,10 @@
       <el-button
         type="primary"
         @click="submitForm"
-        style="width: 80%; margin-bottom: 20px"
+        style="width: 80%; margin: 20px 0"
         >发布帖子</el-button
       >
+      <a @click="runway" style="cursor: pointer" title="收起">^</a>
     </div>
   </div>
 </template>
@@ -400,8 +401,11 @@ const optionData = reactive({});
 const vFormRef = ref(null);
 const submitForm = () => {
   if (!obj.isShow) {
-    document.querySelector(".tr_Y").style.transform = "translateY(0)";
+    document.querySelector(".add_blog_box").classList.add("run");
+    document.querySelector(".add_blog_box").classList.remove("runway");
+
     obj.isShow = true;
+  } else {
     axios.get("/blog/createBlog").then((res) => {
       obj.bid = res.data.data;
       let file = vFormRef.value.getWidgetRef("fileupload28013");
@@ -409,7 +413,6 @@ const submitForm = () => {
       let video = vFormRef.value.getWidgetRef("fileupload86098");
       video.setUploadData("bid", obj.bid);
     });
-  } else {
     vFormRef.value.getFormData().then((formData) => {
       axios
         .post("/blog/addBlog", {
@@ -419,11 +422,17 @@ const submitForm = () => {
           content: formData.textarea111653,
         })
         .then((res) => {
-          alert("发帖成功")
+          alert("发帖成功");
           window.location.reload();
         });
     });
   }
+};
+const runway = async () => {
+  document.querySelector(".add_blog_box").classList.add("runway");
+  document.querySelector(".add_blog_box").classList.remove("run");
+  document.querySelector(".tr_Y").style.transform = "translateY(-100px)";
+  obj.isShow = false;
 };
 </script>
 <style scoped>
@@ -454,13 +463,26 @@ const submitForm = () => {
   animation: run 0.5s;
   animation-fill-mode: forwards;
 }
+.runway {
+  animation: runway 0.5s;
+  animation-fill-mode: forwards;
+}
 @keyframes run {
   0% {
     /* transform: translateX(0); */
-    height: 100px;
+    height: 10px;
   }
   100% {
-    height: 300px;
+    height: 700px;
+  }
+}
+@keyframes runway {
+  0% {
+    /* transform: translateX(0); */
+    height: 700px;
+  }
+  100% {
+    height: 10px;
   }
 }
 </style>

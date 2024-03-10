@@ -58,6 +58,7 @@
         ></el-aside>
       </el-container>
     </el-container>
+    <el-backtop :right="100" :bottom="100" />
   </div>
 </template>
 
@@ -79,18 +80,20 @@ const obj = reactive({
 onMounted(() => {
   axios.get("/user/function/getUser/").then((res) => {
     obj.user = res.data.data;
-    obj.user.headImage = "http://localhost:8080/" + obj.user.headImage;
+    obj.user.headImage = "http://localhost:8080" + obj.user.headImage;
   });
 });
 function goPersonal(id) {
-  router.push({
-    path: "/personal",
-    query: {
-      id:obj.user.uid
-    }
-  }).then(() => {
-  window.location.reload();
-});
+  router
+    .push({
+      path: "/personal",
+      query: {
+        id: obj.user.uid,
+      },
+    })
+    .then(() => {
+      window.location.reload();
+    });
 }
 const sendKeyword = () => {
   router.push("/index/posts");

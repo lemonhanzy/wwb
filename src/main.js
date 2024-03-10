@@ -3,6 +3,8 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import "./css/Vip.css"
+import "./css/Img.css"
+import "./css/Posts.css"
 import App from './App.vue'
 import router from './router'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'

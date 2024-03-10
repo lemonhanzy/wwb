@@ -1,0 +1,16 @@
+.file {
+    margin-top: 20px;
+    display: flex;
+    flex-wrap: wrap;
+  }
+.file img {
+    max-width: 520px;
+    min-height: 300px;
+    max-height: 300px;
+    margin-right: 10px;
+    margin-bottom: 10px;
+    object-fit: contain;
+    border-radius: 10px;
+    z-index: 9999;
+    cursor: pointer;
+  }

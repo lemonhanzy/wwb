@@ -54,15 +54,57 @@
             style="margin-top: 1.5px"
             >{{ obj.blog.love }}</span
           >
-          点赞</span
-        >
+        </span>
         <span
-          ><img src="../img//评论.png" alt="" class="icon" />评论(<span
+          ><img src="../img//评论.png" alt="" class="icon" />(<span
             style="margin-top: 1.5px"
             >{{ obj.blog.comments.length }})</span
           ></span
         >
-        <span><img src="../img//转发.png" alt="" class="icon" />转发</span>
+        <el-popover :visible="visible" placement="top" :width="160">
+          <p>分享至？</p>
+          <div style="width: 150px; display: flex">
+            <!-- <el-button size="small" text @click="visible = false"
+              >cancel</el-button
+            > -->
+            <div @click="shareQQ" style="cursor: pointer">
+              <img
+                src="../img/QQ.png"
+                width="20px"
+                style="vertical-align: middle"
+              />QQ
+            </div>
+            <div style="cursor: pointer">
+              <img
+                src="../img/wx.png"
+                width="20px"
+                style="vertical-align: middle"
+              />微信
+            </div>
+            <div
+              @click="
+                forward(obj.blog, 'test转发');
+                visible = true;
+              "
+              style="cursor: pointer"
+            >
+              <img
+                src="../img/动态.png"
+                width="20px"
+                style="vertical-align: middle"
+              />动态
+            </div>
+          </div>
+          <template #reference>
+            <span style="cursor: pointer"
+              ><img src="../img/转发.png" alt="" class="icon" />转发<span
+                style="margin-top: 1.5px"
+                v-if="obj.blog.forwardNum != 0 && obj.blog.forwardNum != null"
+                >({{ obj.blog.forwardNum }})</span
+              ></span
+            >
+          </template>
+        </el-popover>
       </div>
       <div class="comments" id="comment">
         <div class="avatar">
@@ -183,6 +225,29 @@ function checkImg() {
     obj.isBg_black = false;
   };
 }
+
+// 转发
+function forward(posts, forwardContent) {
+  console.log(posts);
+  axios
+    .post("/blog/addBlog", {
+      title: posts.title,
+      files: posts.files,
+      forwardBid: posts.bid,
+      forwardContent: forwardContent,
+      forwardUser: {
+        uid: posts.uid,
+      },
+      tag: posts.tag,
+      content: posts.content,
+    })
+    .then((res) => {
+      console.log(res);
+    });
+}
+function shareQQ() {
+  location.href = `https://connect.qq.com/widget/shareqq/index.html?url='${location.href}'&title=王卫来也'&pics='src/img/WWB(small).png'&desc='王卫的网站'`;
+}
 const timeFormat = computed(
   () => (date) => dayjs(date).format("YYYY年MM月DD日 HH:mm")
 );
@@ -248,18 +313,7 @@ function goPosts() {
   flex-direction: column;
   justify-content: space-evenly;
 }
-.file {
-  margin-top: 20px;
-  display: flex;
-}
-.file img {
-  width: 150px;
-  height: 150px;
-  margin-right: 10px;
-  margin-bottom: 10px;
-  object-fit: cover;
-  border-radius: 10px;
-}
+
 .file video {
   width: 500px;
   border-radius: 10px;

@@ -28,9 +28,30 @@
           <p class="time">{{ timeFormat(item.pubTime) }}</p>
         </div>
       </div>
-      <div class="content">
+      <p
+        class="post-content"
+        style="margin-left: 50px"
+        v-if="item.forwardUid != null && item.forwardUid != 0"
+      >
+        {{ item.forwardContent }}
+      </p>
+      <div
+        :class="[
+          'content',
+          item.forwardUid != null && item.forwardUid != 0 ? 'forward' : '',
+        ]"
+      >
         <h2>
-          <span @click="goPostsDetail(item.bid)">{{ item.title }}</span>
+          <span
+            @click="
+              goPostsDetail(
+                item.forwardUid != null && item.forwardUid != 0
+                  ? item.forwardBid
+                  : item.bid
+              )
+            "
+            >{{ item.title }}</span
+          >
         </h2>
         <p class="post-content">
           {{ item.content }}
@@ -77,9 +98,51 @@
             >({{ item.comments.length }})</span
           ></span
         >
-        <span style="cursor: pointer"
-          ><img src="../img/转发.png" alt="" class="icon" />转发</span
-        >
+
+        <el-popover :visible="visible" placement="top" :width="160">
+          <p>分享至？</p>
+          <div style="width: 150px; display: flex">
+            <!-- <el-button size="small" text @click="visible = false"
+              >cancel</el-button
+            > -->
+            <div @click="shareQQ" style="cursor: pointer">
+              <img
+                src="../img/QQ.png"
+                width="20px"
+                style="vertical-align: middle"
+              />QQ
+            </div>
+            <div style="cursor: pointer">
+              <img
+                src="../img/wx.png"
+                width="20px"
+                style="vertical-align: middle"
+              />微信
+            </div>
+            <div
+              @click="
+                forward(item, 'test转发');
+                visible = true;
+              "
+              style="cursor: pointer"
+            >
+              <img
+                src="../img/动态.png"
+                width="20px"
+                style="vertical-align: middle"
+              />动态
+            </div>
+          </div>
+          <template #reference>
+            <span style="cursor: pointer"
+              ><img src="../img/转发.png" alt="" class="icon" />转发<span
+                style="margin-top: 1.5px"
+                v-if="item.forwardNum != 0 && item.forwardNum != null"
+                >({{ item.forwardNum }})</span
+              ></span
+            >
+          </template>
+        </el-popover>
       </div>
       <div class="comments">
         <div class="avatar">
@@ -111,11 +174,19 @@
 
 <script setup>
 import axios from "../hooks/request";
-import { computed, onMounted, reactive, onBeforeUnmount, watch } from "vue";
+import {
+  computed,
+  onMounted,
+  reactive,
+  onBeforeUnmount,
+  watch,
+  watchEffect,
+} from "vue";
 import dayjs from "dayjs";
-import { useRouter } from "vue-router";
+import { useRouter, useRoute } from "vue-router";
 import emitter from "../utils";
 const router = useRouter();
+const route = useRoute();
 const obj = reactive({
   num: 0,
   bloglist: [],
@@ -141,7 +212,6 @@ function getBlogAll() {
       { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
     )
     .then((res) => {
-      console.log(obj.num);
       obj.bloglist.push(...res.data.data);
       obj.bloglist.forEach((a) => {
         let lastSlashIndex = a.user.headImage.lastIndexOf("/");
@@ -190,17 +260,13 @@ function handleScroll(e) {
 
 //加载
 onMounted(() => {
+  getBlogAll();
   window.addEventListener("scroll", handleScroll);
   axios.get("/love/getLove").then((res) => {
     obj.loves = res.data.data;
   });
 });
-//监听
-watch(
-  () => {
-    setTimeout(() => getBlogAll(), 200);
-  }
-);
+
 function clickLove(bid, index) {
   axios.get("/love/addLove/" + bid).then((addLove) => {
     axios.get("/love/getLove").then((res) => {
@@ -245,8 +311,8 @@ emitter.on("on-button-click", (e) => {
   if (e) {
     obj.keyword = e;
     console.log(obj.keyword);
-    obj.num=0
-    obj.bloglist=[]
+    obj.num = 0;
+    obj.bloglist = [];
     axios
       .post(
         "/blog/getAll",
@@ -299,8 +365,26 @@ function goPersonal(id) {
     },
   });
 }
+function forward(posts, forwardContent) {
+  console.log(posts);
+  axios
+    .post("/blog/addBlog", {
+      title: posts.title,
+      files: posts.files,
+      forwardBid: posts.bid,
+      forwardContent: forwardContent,
+      forwardUser: {
+        uid: posts.uid,
+      },
+      tag: posts.tag,
+      content: posts.content,
+    })
+    .then((res) => {
+      console.log(res);
+    });
+}
 function shareQQ() {
-  location.href = `https://connect.qq.com/widget/shareqq/index.html?url='${location.href}'&title=王卫来也'&pics='src/img/点赞_active.png'&desc='${王卫的网站}}'`;
+  location.href = `https://connect.qq.com/widget/shareqq/index.html?url='${location.href}'&title=王卫来也'&pics='src/img/WWB(small).png'&desc='王卫的网站'`;
 }
 </script>
 
@@ -327,7 +411,7 @@ function shareQQ() {
   50% {
     top: 50%;
     left: 50%;
-    transform: translateX(-50%) translateY(-50%) scale(4);
+    transform: translateX(-50%) translateY(-50%) scale(2);
     border-radius: 0;
     z-index: 9999;
     /* object-fit: contain; */
@@ -415,20 +499,6 @@ h2 {
   -webkit-box-orient: vertical;
 }
 
-.file {
-  margin-top: 20px;
-  display: flex;
-}
-.file img {
-  width: 150px;
-  height: 150px;
-  margin-right: 10px;
-  margin-bottom: 10px;
-  object-fit: cover;
-  border-radius: 10px;
-  z-index: 9999;
-  cursor: pointer;
-}
 img {
   transition: all 0.1s;
 }

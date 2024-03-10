@@ -2,37 +2,49 @@
   <div class="app">
     <div class="personal_header">
       <div class="bg">
-        <a class="back-btn" @click="goPosts" style="cursor: pointer;">&lt;返回</a>
+        <a class="back-btn" @click="goPosts" style="cursor: pointer"
+          >&lt;返回</a
+        >
         <img src="../img/WWB(large).png" alt="" width="700" />
       </div>
       <div class="personal">
-        <el-avatar
-          class="headImg"
-          :size="150"
-          :src=obj.headImage
-        />
+        <el-avatar class="headImg" :size="150" :src="obj.headImage" />
+        {{ obj.headImage }}
         <!-- <span :class="['username', item.user.isVip ? 'vip' : '']">姓名</span> -->
         <span class="username">{{ obj.user.username }}</span>
-        <el-button class="btn" type="primary" v-if="!obj.myFlag&&!obj.friendFlag" @click="addFriend">关注</el-button>
-        <el-button class="btn" type="primary" v-if="!obj.myFlag&&obj.friendFlag" @click="addFriend" disabled>已关注</el-button>
+        <el-button
+          class="btn"
+          type="primary"
+          v-if="!obj.myFlag && !obj.friendFlag"
+          @click="addFriend"
+          >关注</el-button
+        >
+        <el-button
+          class="btn"
+          type="primary"
+          v-if="!obj.myFlag && obj.friendFlag"
+          @click="addFriend"
+          disabled
+          >已关注</el-button
+        >
       </div>
     </div>
     <el-tabs v-model="activeName" class="demo-tabs">
       <el-tab-pane label="关注列表" name="first">
         <div class="friends">
-          <div class="comment" v-for="item,index in obj.friends" :key="index">
+          <div
+            class="comment"
+            v-for="(item, index) in obj.friends"
+            :key="index"
+          >
             <div class="user">
               <div class="avatar">
-                <el-avatar
-                  :size="50"
-                  :src="item.user.headImage"
-                />
+                <el-avatar :size="50" :src="item.user.headImage" />
               </div>
               <div class="user-info">
                 <p>
                   {{ item.user.username }}
                 </p>
-                
               </div>
             </div>
           </div>
@@ -47,10 +59,7 @@
         >
           <div class="header">
             <div :class="['avatar', item.user.isVip ? 'vip' : '']">
-              <el-avatar
-          :size="50"
-          :src=obj.headImage
-        />
+              <el-avatar :size="50" :src="obj.headImage" />
             </div>
             <div class="user-info">
               <p
@@ -62,7 +71,19 @@
               <p class="time">{{ timeFormat(item.pubTime) }}</p>
             </div>
           </div>
-          <div class="content">
+          <p
+            class="post-content"
+            style="margin-left: 50px"
+            v-if="item.forwardUid != null && item.forwardUid != 0"
+          >
+            {{ item.forwardContent }}
+          </p>
+          <div
+            :class="[
+              'content',
+              item.forwardUid != null && item.forwardUid != 0 ? 'forward' : '',
+            ]"
+          >
             <h2>
               <span @click="goPostsDetail(item.bid)">{{ item.title }}</span>
             </h2>
@@ -111,16 +132,54 @@
                 >({{ item.comments.length }})</span
               ></span
             >
-            <span style="cursor: pointer"
-              ><img src="../img/转发.png" alt="" class="icon" />转发</span
-            >
+            <el-popover :visible="visible" placement="top" :width="160">
+              <p>分享至？</p>
+              <div style="width: 150px; display: flex">
+                <!-- <el-button size="small" text @click="visible = false"
+              >cancel</el-button
+            > -->
+                <div @click="shareQQ" style="cursor: pointer">
+                  <img
+                    src="../img/QQ.png"
+                    width="20px"
+                    style="vertical-align: middle"
+                  />QQ
+                </div>
+                <div style="cursor: pointer">
+                  <img
+                    src="../img/wx.png"
+                    width="20px"
+                    style="vertical-align: middle"
+                  />微信
+                </div>
+                <div
+                  @click="
+                    forward(item, 'test转发');
+                    visible = true;
+                  "
+                  style="cursor: pointer"
+                >
+                  <img
+                    src="../img/动态.png"
+                    width="20px"
+                    style="vertical-align: middle"
+                  />动态
+                </div>
+              </div>
+              <template #reference>
+                <span style="cursor: pointer"
+                  ><img src="../img/转发.png" alt="" class="icon" />转发<span
+                    style="margin-top: 1.5px"
+                    v-if="item.forwardNum != 0 && item.forwardNum != null"
+                    >({{ item.forwardNum }})</span
+                  ></span
+                >
+              </template>
+            </el-popover>
           </div>
           <div class="comments">
             <div class="avatar">
-              <el-avatar
-                :size="30"
-                src="http://localhost:8080/img/默认头像.jpg"
-              />
+              <el-avatar :size="30" :src="obj.headImage" />
             </div>
             <el-input
               v-model="obj.comment[index]"
@@ -165,32 +224,36 @@
 
       <el-tab-pane label="修改信息" name="forth" v-if="obj.myFlag">
         <div class="changebox">
-        <div class="changebox2">
-        <div class="input-field">
-        <p class="label">用户名：</p>
-        <el-input type="text" v-model="obj.user.username" size="large"/>
-      </div>
-      <div class="input-field">
-        <p class="label">新密码：</p>
-        <el-input type="password" v-model="obj.password2" size="large"/>
-      </div>
-      <div class="input-field">
-        <p class="label">确认密码：</p>
-        <el-input type="password" v-model="obj.password" size="large"/>
-      </div>
-      
-      <div class="input-field">
-        <p style="margin-left: 90px;width: 60px;">头像：</p>
-          <input type="file" @change="changeImg">
-      </div>
-      <div class="input-field" style="width: 250px;margin: 10px auto;">
-        <el-button type="primary" size="large" style="width: 100px;margin: 5px auto;" @click="changeUser">提交</el-button>
-      </div>
-        </div>
-    
-    </div>
-      </el-tab-pane>
+          <div class="changebox2">
+            <div class="input-field">
+              <p class="label">用户名：</p>
+              <el-input type="text" v-model="obj.user.username" size="large" />
+            </div>
+            <div class="input-field">
+              <p class="label">新密码：</p>
+              <el-input type="password" v-model="obj.password2" size="large" />
+            </div>
+            <div class="input-field">
+              <p class="label">确认密码：</p>
+              <el-input type="password" v-model="obj.password" size="large" />
+            </div>
 
+            <div class="input-field">
+              <p style="margin-left: 90px; width: 60px">头像：</p>
+              <input type="file" @change="changeImg" />
+            </div>
+            <div class="input-field" style="width: 250px; margin: 10px auto">
+              <el-button
+                type="primary"
+                size="large"
+                style="width: 100px; margin: 5px auto"
+                @click="changeUser"
+                >提交</el-button
+              >
+            </div>
+          </div>
+        </div>
+      </el-tab-pane>
     </el-tabs>
   </div>
   <div class="bg_black" v-if="obj.isBg_black"></div>
@@ -207,7 +270,7 @@ import {
   ref,
 } from "vue";
 import dayjs from "dayjs";
-import { useRouter,useRoute } from "vue-router";
+import { useRouter, useRoute } from "vue-router";
 import emitter from "../utils";
 const router = useRouter();
 const route = useRoute();
@@ -225,72 +288,78 @@ const obj = reactive({
   isBg_black: false,
   isIssue: false,
   imgs: [],
-  uid:"",
-  friends:[],
-  myFlag:true,
-  friendFlag:false,
-  file:{},
-    password:"",
-    password2:"",
-    user:{
-        username:"",
-        password:"",
-        headImage:""
-    },
-  changeFlag:false,
-  headImage:""
+  uid: "",
+  friends: [],
+  myFlag: true,
+  friendFlag: false,
+  file: {},
+  password: "",
+  password2: "",
+  user: {
+    username: "",
+    password: "",
+    headImage: "",
+  },
+  changeFlag: false,
+  headImage: "",
+  hasIntersected: false,
 });
-function addFriend(){
-  axios.get("/friend/add/"+obj.uid).then((res) => {
-    if(res.data.code==200){
-      alert("添加成功")
-      window.location.reload()
-    }else{
-      alert("出错啦")
+function addFriend() {
+  axios.get("/friend/add/" + obj.uid).then((res) => {
+    if (res.data.code == 200) {
+      alert("添加成功");
+      window.location.reload();
+    } else {
+      alert("出错啦");
     }
-  })
+  });
 }
-function changeImg(e){
-  if(e.target.files[0]){
-    obj.file=e.target.files[0]
-    obj.changeFlag=true
+function changeImg(e) {
+  if (e.target.files[0]) {
+    obj.file = e.target.files[0];
+    obj.changeFlag = true;
     console.log(obj.file);
   }
 }
-function changeUser(){
-  if(obj.password===obj.password2){
-    if(obj.password!==""){
-      obj.user.password=obj.password2
+function changeUser() {
+  if (obj.password === obj.password2) {
+    if (obj.password !== "") {
+      obj.user.password = obj.password2;
     }
-    axios.put("/user/function/changeInfo",obj.user).then(res=>{
-    if(obj.changeFlag){
-      axios.put("/user/function/changeImg",{file:obj.file},{headers:{"Content-Type":"multipart/form-data"}}).then(res2=>{
-      if(res2.data.code===200&&res.data.code===200){
-        alert("修改成功，请重新登陆")
+    axios.put("/user/function/changeInfo", obj.user).then((res) => {
+      if (obj.changeFlag) {
+        axios
+          .put(
+            "/user/function/changeImg",
+            { file: obj.file },
+            { headers: { "Content-Type": "multipart/form-data" } }
+          )
+          .then((res2) => {
+            if (res2.data.code === 200 && res.data.code === 200) {
+              alert("修改成功，请重新登陆");
+              localStorage.removeItem("token");
+              window.location.href = "http://localhost:5173";
+            }
+          });
+      } else {
+        alert("修改成功，请重新登陆");
         localStorage.removeItem("token");
-      window.location.href = "http://localhost:5173";
+        window.location.href = "http://localhost:5173";
       }
-    })
-    }else{
-      alert("修改成功，请重新登陆")
-        localStorage.removeItem("token");
-      window.location.href = "http://localhost:5173";
-    }
-    
-  })
-  }else{
-    alert("两次密码不一致")
+    });
+  } else {
+    alert("两次密码不一致");
   }
 }
 function getBlogAll() {
-  obj.uid=route.query.id
+  obj.uid = route.query.id;
   axios
     .post(
       "/blog/getAll",
       {
         num: obj.num,
         keyword: obj.keyword,
-        uid:obj.uid
+        uid: obj.uid,
       },
       { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
     )
@@ -306,13 +375,13 @@ function getBlogAll() {
         obj.bloglist.push(...res.data.data);
         console.log(obj.bloglist);
         obj.bloglist.forEach((a) => {
-          if(a.files!=null){
+          if (a.files != null) {
             a.files.forEach((img) => {
-            if (img.fileType == "图片") {
-              obj.imgs.push(img);
-            }
-          });
-          obj.imgs = [...new Set(obj.imgs)];
+              if (img.fileType == "图片") {
+                obj.imgs.push(img);
+              }
+            });
+            obj.imgs = [...new Set(obj.imgs)];
           }
         });
       }
@@ -321,7 +390,7 @@ function getBlogAll() {
 onBeforeUnmount(() => {
   window.removeEventListener("scroll", handleScroll);
 });
-function handleScroll(e) {
+function handleScroll() {
   let lazyLoad = document.getElementById(
     `${obj.bloglist[obj.bloglist.length - 1].bid}_posts`
   );
@@ -350,40 +419,39 @@ function handleScroll(e) {
 
 //加载
 onMounted(() => {
-  obj.uid=route.query.id
-  window.addEventListener("scroll", handleScroll);
+  window.scrollTo({
+    top: 0, // 设置垂直滚动位置
+    left: 0, // 设置水平滚动位置
+  });
+  obj.uid = route.query.id;
   axios.get("/love/getLove").then((res) => {
     obj.loves = res.data.data;
   });
-  axios.get("/user/function/getUser/"+obj.uid).then((res) => {
-    if(res.data.code===220){
-      obj.myFlag=true
-      obj.user=res.data.data
-      obj.headImage="http://localhost:8080/"+obj.user.headImage
-    }else{
-      obj.myFlag=false
-      obj.user=res.data.data
-      obj.headImage="http://localhost:8080/"+obj.user.headImage
-      console.log(obj.headImage);
+  axios.get("/user/function/getUser/" + obj.uid).then((res) => {
+    if (res.data.code === 220) {
+      obj.myFlag = true;
+      obj.user = res.data.data;
+      obj.headImage = "http://localhost:8080" + obj.user.headImage;
+    } else {
+      obj.myFlag = false;
+      obj.user = res.data.data;
+      obj.headImage = "http://localhost:8080" + obj.user.headImage;
     }
-  })
-  axios.get("/friend/getAll/"+obj.uid).then((res) => {
-    obj.friends=res.data.data
-    obj.friends.forEach(a=>{
-      a.user.headImage="http://localhost:8080/"+a.user.headImage
-    })
-    console.log(obj.friends);
-  })
-  axios.get("/friend/isFriend/"+obj.uid).then((res) => {
-    obj.friendFlag=res.data.data
-  })
+  });
+  axios.get("/friend/getAll/" + obj.uid).then((res) => {
+    obj.friends = res.data.data;
+    obj.friends.forEach((a) => {
+      a.user.headImage = "http://localhost:8080" + a.user.headImage;
+    });
+  });
+  axios.get("/friend/isFriend/" + obj.uid).then((res) => {
+    obj.friendFlag = res.data.data;
+  });
+  getBlogAll();
+  window.addEventListener("scroll", handleScroll);
 });
 //监听
-watch(
-  () => {
-    setTimeout(() => getBlogAll(), 200);
-  }
-);
+
 function clickLove(bid, index) {
   axios.get("/love/addLove/" + bid).then((addLove) => {
     axios.get("/love/getLove").then((res) => {
@@ -483,6 +551,7 @@ function checkImg2() {
   img.style.height = height + "px";
   img.style.top = `${rect.top}px`;
   img.style.left = `${rect.left}px`;
+  setTimeout(() => {}, 100);
   img.classList.add("move2");
   img.classList.add("pointer-events");
   setTimeout(() => {
@@ -516,20 +585,20 @@ function goPosts() {
 </script>
 
 <style  scoped>
-.changebox{
-    display: flex;
-    font-size: 20px;
+.changebox {
+  display: flex;
+  font-size: 20px;
 }
-.changebox2{
-    margin: 50px 200px;
+.changebox2 {
+  margin: 50px 200px;
 }
-.label{
-    width: 230px;
-    text-align: right;
+.label {
+  width: 230px;
+  text-align: right;
 }
-.input-field{
-    display:flex;
-    margin-bottom: 50px;
+.input-field {
+  display: flex;
+  margin-bottom: 50px;
 }
 .waterfall-container {
   column-count: 3; /* 设置为多列布局 */
@@ -630,7 +699,7 @@ function goPosts() {
   50% {
     top: 50%;
     left: 50%;
-    transform: translateX(-50%) translateY(-50%) scale(4);
+    transform: translateX(-50%) translateY(-50%) scale(2);
     border-radius: 0;
     z-index: 9999;
     /* object-fit: contain; */
@@ -652,7 +721,7 @@ function goPosts() {
   50% {
     top: 50%;
     left: 50%;
-    transform: translateX(-50%) translateY(-50%) scale(3);
+    transform: translateX(-50%) translateY(-50%) scale(2);
     border-radius: 0;
     /* object-fit: contain; */
   }
@@ -733,21 +802,6 @@ h2 {
   display: -webkit-box;
   -webkit-line-clamp: 5; /* 控制最大行数为5行 */
   -webkit-box-orient: vertical;
-}
-
-.file {
-  margin-top: 20px;
-  display: flex;
-}
-.file img {
-  width: 150px;
-  height: 150px;
-  margin-right: 10px;
-  margin-bottom: 10px;
-  object-fit: cover;
-  border-radius: 10px;
-  z-index: 9999;
-  cursor: pointer;
 }
 img {
   transition: all 0.1s;
@@ -945,5 +999,4 @@ img {
   display: flex;
   align-items: center;
 }
-
 </style>
