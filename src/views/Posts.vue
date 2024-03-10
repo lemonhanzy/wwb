@@ -7,15 +7,21 @@
       class="post-container"
       v-for="(item, index) in obj.bloglist"
       :key="item.bid"
+      :id="item.bid + '_posts'"
     >
       <div class="header">
-        <div :class="['avatar', item.user.isVip ? 'vip' : '']">
-          <el-avatar :size="50" src="http://localhost:8080/img/默认头像.jpg" />
+        <div
+          :class="['avatar', item.user.isVip ? 'vip' : '']"
+          @click="goPersonal(item.user.uid)"
+          style="cursor: pointer"
+        >
+          <el-avatar :size="50" :src="item.user.headImage" />
         </div>
         <div class="user-info">
           <p
             :class="item.user.isVip ? ['colortxt', 'text'] : ''"
             @click="goPersonal(item.user.uid)"
+            style="cursor: pointer"
           >
             {{ item.user.username }}
           </p>
@@ -135,7 +141,13 @@ function getBlogAll() {
       { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
     )
     .then((res) => {
+      console.log(obj.num);
       obj.bloglist.push(...res.data.data);
+      obj.bloglist.forEach((a) => {
+        let lastSlashIndex = a.user.headImage.lastIndexOf("/");
+        let path = a.user.headImage.substring(lastSlashIndex + 1);
+        a.user.headImage = "http://localhost:8080/img/" + path;
+      });
       if (res.data.data.length == 0) {
         obj.flag = true;
         obj.loading = false;
@@ -150,24 +162,36 @@ onBeforeUnmount(() => {
   window.removeEventListener("scroll", handleScroll);
 });
 function handleScroll(e) {
-  // 在滚动时执行的操作
-  // 可见窗口高度
-  const windowHeight = window.innerHeight; // 滚动条滚动的距离
-  const scrollY = window.scrollY; // 页面的总高度
-  const scrollHeight = document.body.scrollHeight; // 计算滚动条距离底部的距离
-  const distanceToBottom = scrollHeight - windowHeight - scrollY;
-  if (distanceToBottom <= 1) {
-    obj.num += 3;
-    obj.flag = true;
-  }
+  let lazyLoad = document.getElementById(
+    `${obj.bloglist[obj.bloglist.length - 1].bid}_posts`
+  );
+  const options = {
+    root: null, // 根元素，如果为 null 则为 viewport
+    rootMargin: "30px",
+    threshold: 1.0,
+  };
+  const io = new IntersectionObserver((entries, observer) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        // 目标元素进入视口时的处理逻辑
+        if (!obj.hasIntersected) {
+          obj.hasIntersected = true;
+          console.log(1);
+          obj.num += 3;
+          setTimeout(() => getBlogAll(), 500);
+        }
+      } else {
+        obj.hasIntersected = false;
+      }
+    });
+  }, options); // 将需要观察的目标元素传入 IntersectionObserver 实例
+  io.observe(lazyLoad);
 }
+console.log();
 
-function toFaTie() {
-  router.push("/addBlog");
-}
 //加载
 onMounted(() => {
-  getBlogAll();
+  // getBlogAll();
   window.addEventListener("scroll", handleScroll);
   axios.get("/love/getLove").then((res) => {
     obj.loves = res.data.data;
@@ -175,7 +199,6 @@ onMounted(() => {
 });
 //监听
 watch(
-  () => obj.num,
   () => {
     setTimeout(() => getBlogAll(), 200);
   }

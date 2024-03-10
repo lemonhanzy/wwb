@@ -1,7 +1,7 @@
 <template>
   <div style="background-color: #fff; height: 100%">
     <div class="hot-posts">
-      <div class="hot-posts-title">热度榜</div>
+      <div class="hot-posts-title">点赞榜</div>
       <div class="post" v-for="(item, index) in obj.hotPosts" :key="item.bid">
         <div class="post-title" @click="goPosts-Detail(item.bid)">
           <span :class="index + 1 < 4 ? 'red' : ''">{{ index + 1 }}、</span

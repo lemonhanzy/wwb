@@ -3,12 +3,13 @@
   <div class="hot-posts">
     <div class="hot-posts-title">
       公告栏
-      <span class="addNotice" @click="addNotice">+</span>
+      <!-- <span class="addNotice" @click="addNotice">+</span> -->
 
     </div>
     <div class="post" v-for="(item) in obj.notice" :key="item.nid">
       <div class="post-title">
-       <span class="redPoint">·</span> {{ item.title }}
+       <span class="redPoint">·</span>
+        {{ item.title }}
       </div>
       <div class="post-details">{{ item.content }}</div>
     </div>
@@ -26,9 +27,9 @@ const router = useRouter()
 const obj=reactive({
 notice: [],
 });
-const addNotice = ()=>{
-router.push("/notice/addNotice")
-}
+// const addNotice = ()=>{
+// router.push("/notice/addNotice")
+// }
 onMounted(()=>{
 axios.get("/notice/getNotice").then((res)=>{
   // console.log(res.data.data);

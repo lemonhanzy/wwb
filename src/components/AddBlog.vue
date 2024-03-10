@@ -28,8 +28,10 @@
   <script setup>
 import { ref, reactive } from "vue";
 import { ElMessage } from "element-plus";
+import axios from "../hooks/request";
 const obj = reactive({
   isShow: false,
+  bid: "",
 });
 const formJson = reactive({
   widgetList: [
@@ -66,7 +68,7 @@ const formJson = reactive({
                 hidden: false,
                 clearable: true,
                 showPassword: false,
-                required: false,
+                required: true,
                 requiredHint: "",
                 validation: "",
                 validationHint: "",
@@ -136,7 +138,7 @@ const formJson = reactive({
                 hidden: false,
                 clearable: true,
                 showPassword: false,
-                required: false,
+                required: true,
                 requiredHint: "",
                 validation: "",
                 validationHint: "",
@@ -208,7 +210,7 @@ const formJson = reactive({
         readonly: false,
         disabled: false,
         hidden: false,
-        required: false,
+        required: true,
         requiredHint: "",
         validation: "",
         validationHint: "",
@@ -259,7 +261,7 @@ const formJson = reactive({
                 requiredHint: "",
                 customRule: "",
                 customRuleHint: "",
-                uploadURL: "",
+                uploadURL: "http://localhost:8080/file/uploadFile",
                 uploadTip: "",
                 withCredentials: false,
                 multipleSelect: false,
@@ -273,12 +275,12 @@ const formJson = reactive({
                 labelTooltip: null,
                 onCreated: "",
                 onMounted: "",
-                onBeforeUpload: "",
+                onBeforeUpload: ``,
                 onUploadSuccess:
                   "var video = this.getWidgetRef('fileupload86098')\nvideo.setHidden(true)\n\n",
                 onUploadError: "",
                 onFileRemove:
-                  "var video = this.getWidgetRef('fileupload86098')\nif (fileList.length==0) {\n  video.setHidden(false)\n}",
+                  "const encodedFilePath = encodeURIComponent(file.response.data);axios.delete('http://localhost:8080/file/deleteFile?fileUrl='+encodedFilePath)\nvar video = this.getWidgetRef('fileupload86098');\nif (fileList.length === 0) {\n  video.setHidden(false);\n}",
                 onValidate: "",
               },
               id: "fileupload28013",
@@ -323,7 +325,7 @@ const formJson = reactive({
                 requiredHint: "",
                 customRule: "",
                 customRuleHint: "",
-                uploadURL: "",
+                uploadURL: "http://localhost:8080/file/uploadFile",
                 uploadTip: "",
                 withCredentials: false,
                 multipleSelect: false,
@@ -342,9 +344,10 @@ const formJson = reactive({
                   "var img = this.getWidgetRef('fileupload28013')\nimg.setHidden(true)\n\n",
                 onUploadError: "",
                 onFileRemove:
-                  "var img = this.getWidgetRef('fileupload28013')\nif (fileList.length==0) {\n  img.setHidden(false)\n}",
+                  "const encodedFilePath = encodeURIComponent(file.response.data);axios.delete('http://localhost:8080/file/deleteFile?fileUrl='+encodedFilePath)\nvar img = this.getWidgetRef('fileupload28013')\nif (fileList.length==0) {\n  img.setHidden(false)\n}",
                 onValidate: "",
               },
+
               id: "fileupload86098",
             },
           ],
@@ -395,22 +398,31 @@ const formJson = reactive({
 const formData = reactive({});
 const optionData = reactive({});
 const vFormRef = ref(null);
-
 const submitForm = () => {
   if (!obj.isShow) {
     document.querySelector(".tr_Y").style.transform = "translateY(0)";
     obj.isShow = true;
+    axios.get("/blog/createBlog").then((res) => {
+      obj.bid = res.data.data;
+      let file = vFormRef.value.getWidgetRef("fileupload28013");
+      file.setUploadData("bid", obj.bid);
+      let video = vFormRef.value.getWidgetRef("fileupload86098");
+      video.setUploadData("bid", obj.bid);
+    });
   } else {
-    vFormRef.value
-      .getFormData()
-      .then((formData) => {
-        // Form Validation OK
-        alert(JSON.stringify(formData));
-      })
-      .catch((error) => {
-        // Form Validation failed
-        ElMessage.error(error);
-      });
+    vFormRef.value.getFormData().then((formData) => {
+      axios
+        .post("/blog/addBlog", {
+          bid: obj.bid,
+          title: formData.input38184,
+          tag: formData.input29162,
+          content: formData.textarea111653,
+        })
+        .then((res) => {
+          alert("发帖成功")
+          window.location.reload();
+        });
+    });
   }
 };
 </script>

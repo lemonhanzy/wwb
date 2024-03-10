@@ -2,36 +2,37 @@
   <div class="app">
     <div class="personal_header">
       <div class="bg">
-        <a class="back-btn" @click="goPosts">&lt;返回</a>
+        <a class="back-btn" @click="goPosts" style="cursor: pointer;">&lt;返回</a>
         <img src="../img/WWB(large).png" alt="" width="700" />
       </div>
       <div class="personal">
         <el-avatar
           class="headImg"
           :size="150"
-          src="http://localhost:8080/img/默认头像.jpg"
+          :src=obj.headImage
         />
         <!-- <span :class="['username', item.user.isVip ? 'vip' : '']">姓名</span> -->
-        <span class="username">姓名</span>
-        <el-button class="btn" type="primary">关注</el-button>
+        <span class="username">{{ obj.user.username }}</span>
+        <el-button class="btn" type="primary" v-if="!obj.myFlag&&!obj.friendFlag" @click="addFriend">关注</el-button>
+        <el-button class="btn" type="primary" v-if="!obj.myFlag&&obj.friendFlag" @click="addFriend" disabled>已关注</el-button>
       </div>
     </div>
-    <el-tabs v-model="activeName" class="demo-tabs" @tab-click="handleClick">
-      <el-tab-pane label="好友" name="first">
+    <el-tabs v-model="activeName" class="demo-tabs">
+      <el-tab-pane label="关注列表" name="first">
         <div class="friends">
-          <div class="comment" v-for="subComment in 10" :key="subComment">
+          <div class="comment" v-for="item,index in obj.friends" :key="index">
             <div class="user">
               <div class="avatar">
                 <el-avatar
                   :size="50"
-                  src="http://localhost:8080/img/默认头像.jpg"
+                  :src="item.user.headImage"
                 />
               </div>
               <div class="user-info">
                 <p>
-                  {{ subComment }}
+                  {{ item.user.username }}
                 </p>
-                <p>{{ subComment }}</p>
+                
               </div>
             </div>
           </div>
@@ -46,9 +47,9 @@
           <div class="header">
             <div :class="['avatar', item.user.isVip ? 'vip' : '']">
               <el-avatar
-                :size="50"
-                src="http://localhost:8080/img/默认头像.jpg"
-              />
+          :size="50"
+          :src=obj.headImage
+        />
             </div>
             <div class="user-info">
               <p
@@ -160,6 +161,35 @@
         </div>
         <div><el-empty :image-size="200" /></div>
       </el-tab-pane>
+
+      <el-tab-pane label="修改信息" name="forth" v-if="obj.myFlag">
+        <div class="changebox">
+        <div class="changebox2">
+        <div class="input-field">
+        <p class="label">用户名：</p>
+        <el-input type="text" v-model="obj.user.username" size="large"/>
+      </div>
+      <div class="input-field">
+        <p class="label">新密码：</p>
+        <el-input type="password" v-model="obj.password2" size="large"/>
+      </div>
+      <div class="input-field">
+        <p class="label">确认密码：</p>
+        <el-input type="password" v-model="obj.password" size="large"/>
+      </div>
+      
+      <div class="input-field">
+        <p style="margin-left: 90px;width: 60px;">头像：</p>
+          <input type="file" @change="changeImg">
+      </div>
+      <div class="input-field" style="width: 250px;margin: 10px auto;">
+        <el-button type="primary" size="large" style="width: 100px;margin: 5px auto;" @click="changeUser">提交</el-button>
+      </div>
+        </div>
+    
+    </div>
+      </el-tab-pane>
+
     </el-tabs>
   </div>
   <div class="bg_black" v-if="obj.isBg_black"></div>
@@ -176,9 +206,10 @@ import {
   ref,
 } from "vue";
 import dayjs from "dayjs";
-import { useRouter } from "vue-router";
+import { useRouter,useRoute } from "vue-router";
 import emitter from "../utils";
 const router = useRouter();
+const route = useRoute();
 const activeName = ref("second");
 const obj = reactive({
   num: 0,
@@ -193,17 +224,68 @@ const obj = reactive({
   isBg_black: false,
   isIssue: false,
   imgs: [],
+  uid:"",
+  friends:[],
+  myFlag:true,
+  friendFlag:false,
+  file:{},
+    password:"",
+    password2:"",
+    user:{
+        username:"",
+        password:"",
+        headImage:""
+    },
+  changeFlag:false,
+  headImage:""
 });
-
+function addFriend(){
+  axios.get("/friend/add/"+obj.uid).then((res) => {
+    if(res.data.code==200){
+      alert("添加成功")
+      window.location.reload()
+    }else{
+      alert("出错啦")
+    }
+  })
+}
+function changeImg(e){
+  if(e.target.files[0]){
+    obj.file=e.target.files[0]
+    obj.changeFlag=true
+    console.log(obj.file);
+  }
+}
+function changeUser(){
+  if(obj.password===obj.password2){
+    if(obj.password!==""){
+      obj.user.password=obj.password2
+    }
+    axios.put("/user/function/changeInfo",obj.user).then(res=>{
+    if(obj.changeFlag){
+      axios.put("/user/function/changeImg",{file:obj.file},{headers:{"Content-Type":"multipart/form-data"}}).then(res2=>{
+      if(res2.data.code===200&&res.data.code===200){
+        alert("修改成功，请重新登陆")
+        localStorage.removeItem("token");
+      window.location.href = "http://localhost:5173";
+      }
+    })
+    }else{
+      alert("修改成功，请重新登陆")
+        localStorage.removeItem("token");
+      window.location.href = "http://localhost:5173";
+    }
+    
+  })
+  }else{
+    alert("两次密码不一致")
+  }
+}
 function getBlogAll() {
+  obj.uid=route.query.id
   axios
-    .post(
-      "/blog/getAll",
-      {
-        num: obj.num,
-        keyword: obj.keyword,
-      },
-      { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
+    .get(
+      "/blog/getBlogByUid/"+obj.uid,
     )
     .then((res) => {
       if (res.data.data.length == 0) {
@@ -215,13 +297,18 @@ function getBlogAll() {
       } else {
         obj.flag = false;
         obj.bloglist.push(...res.data.data);
+        console.log(obj.bloglist);
         obj.bloglist.forEach((a) => {
-          a.files.forEach((img) => {
+          if(a.files!=null){
+            a.files.forEach((img) => {
             if (img.fileType == "图片") {
               obj.imgs.push(img);
             }
           });
           obj.imgs = [...new Set(obj.imgs)];
+          
+          }
+          
         });
       }
     });
@@ -242,16 +329,36 @@ function handleScroll(e) {
   }
 }
 
-function toFaTie() {
-  router.push("/addBlog");
-}
 //加载
 onMounted(() => {
+  obj.uid=route.query.id
   getBlogAll();
   window.addEventListener("scroll", handleScroll);
   axios.get("/love/getLove").then((res) => {
     obj.loves = res.data.data;
   });
+  axios.get("/user/function/getUser/"+obj.uid).then((res) => {
+    if(res.data.code===220){
+      obj.myFlag=true
+      obj.user=res.data.data
+      obj.headImage="http://localhost:8080/"+obj.user.headImage
+    }else{
+      obj.myFlag=false
+      obj.user=res.data.data
+      obj.headImage="http://localhost:8080/"+obj.user.headImage
+      console.log(obj.headImage);
+    }
+  })
+  axios.get("/friend/getAll/"+obj.uid).then((res) => {
+    obj.friends=res.data.data
+    obj.friends.forEach(a=>{
+      a.user.headImage="http://localhost:8080/"+a.user.headImage
+    })
+    console.log(obj.friends);
+  })
+  axios.get("/friend/isFriend/"+obj.uid).then((res) => {
+    obj.friendFlag=res.data.data
+  })
 });
 //监听
 watch(
@@ -392,6 +499,21 @@ function goPosts() {
 </script>
 
 <style  scoped>
+.changebox{
+    display: flex;
+    font-size: 20px;
+}
+.changebox2{
+    margin: 50px 200px;
+}
+.label{
+    width: 230px;
+    text-align: right;
+}
+.input-field{
+    display:flex;
+    margin-bottom: 50px;
+}
 .waterfall-container {
   column-count: 3; /* 设置为多列布局 */
   column-gap: 10px; /* 列之间的间隔 */
@@ -806,4 +928,5 @@ img {
   display: flex;
   align-items: center;
 }
+
 </style>

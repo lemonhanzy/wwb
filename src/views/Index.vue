@@ -1,7 +1,5 @@
 <template>
   <div class="box">
-    <div class="bigbox" v-if="obj.bg"></div>
-    <change-user-info></change-user-info>
     <el-container>
       <el-header class="header">
         <div class="logo">
@@ -33,8 +31,8 @@
             </span>
             <template #dropdown>
               <el-dropdown-menu>
-                <el-dropdown-item @click="changeInfo2"
-                  >修改资料</el-dropdown-item
+                <el-dropdown-item @click="goPersonal"
+                  >个人信息</el-dropdown-item
                 >
                 <el-dropdown-item @click="logout">退出登录</el-dropdown-item>
               </el-dropdown-menu>
@@ -79,13 +77,20 @@ const obj = reactive({
   },
 });
 onMounted(() => {
-  axios.get("/user/function/getUser").then((res) => {
+  axios.get("/user/function/getUser/").then((res) => {
     obj.user = res.data.data;
     obj.user.headImage = "http://localhost:8080/" + obj.user.headImage;
   });
 });
-function changeInfo2() {
-  obj.bg = true;
+function goPersonal(id) {
+  router.push({
+    path: "/personal",
+    query: {
+      id:obj.user.uid
+    }
+  }).then(() => {
+  window.location.reload();
+});
 }
 const sendKeyword = () => {
   router.push("/index/posts");
