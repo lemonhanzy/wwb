@@ -245,6 +245,8 @@ emitter.on("on-button-click", (e) => {
   if (e) {
     obj.keyword = e;
     console.log(obj.keyword);
+    obj.num=0
+    obj.bloglist=[]
     axios
       .post(
         "/blog/getAll",
