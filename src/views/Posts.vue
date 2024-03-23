@@ -15,7 +15,10 @@
           @click="goPersonal(item.user.uid)"
           style="cursor: pointer"
         >
-          <el-avatar :size="50" :src="item.user.headImage" />
+          <el-avatar
+            :size="50"
+            :src="'http://localhost:8080' + item.user.headImage"
+          />
         </div>
         <div class="user-info">
           <p
@@ -65,11 +68,11 @@
             <img
               style="transition: all 0.5s"
               @click.stop="checkImg"
-              :src="`http://localhost:8080/${img.fileUrl}`"
+              :src="`http://localhost:8080${img.fileUrl}`"
               v-if="img.fileType == '图片'"
             />
             <video
-              :src="`http://localhost:8080/${img.fileUrl}`"
+              :src="`http://localhost:8080${img.fileUrl}`"
               playsinline
               muted
               autoplay
@@ -99,7 +102,7 @@
           ></span
         >
 
-        <el-popover :visible="visible" placement="top" :width="160">
+        <el-popover placement="top" :width="160">
           <p>分享至？</p>
           <div style="width: 150px; display: flex">
             <!-- <el-button size="small" text @click="visible = false"
@@ -119,13 +122,7 @@
                 style="vertical-align: middle"
               />微信
             </div>
-            <div
-              @click="
-                forward(item, 'test转发');
-                visible = true;
-              "
-              style="cursor: pointer"
-            >
+            <div @click="forward(item, 'test转发')" style="cursor: pointer">
               <img
                 src="../img/动态.png"
                 width="20px"
@@ -212,19 +209,18 @@ function getBlogAll() {
       { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
     )
     .then((res) => {
+      obj.num += 3;
       obj.bloglist.push(...res.data.data);
-      obj.bloglist.forEach((a) => {
-        let lastSlashIndex = a.user.headImage.lastIndexOf("/");
-        let path = a.user.headImage.substring(lastSlashIndex + 1);
-        a.user.headImage = "http://localhost:8080/img/" + path;
-      });
+      console.log(obj.bloglist);
       if (res.data.data.length == 0) {
         obj.flag = true;
         obj.loading = false;
         obj.msg = "没有更多了";
+        console.log("结束");
         window.removeEventListener("scroll", handleScroll);
       } else {
         obj.flag = false;
+        console.log("继续");
       }
     });
 }
@@ -237,8 +233,8 @@ function handleScroll(e) {
   );
   const options = {
     root: null, // 根元素，如果为 null 则为 viewport
-    rootMargin: "30px",
-    threshold: 1.0,
+    rootMargin: "0px",
+    threshold: 0.8,
   };
   const io = new IntersectionObserver((entries, observer) => {
     entries.forEach((entry) => {
@@ -247,8 +243,9 @@ function handleScroll(e) {
         if (!obj.hasIntersected) {
           obj.hasIntersected = true;
           console.log(1);
-          obj.num += 3;
-          setTimeout(() => getBlogAll(), 500);
+          setTimeout(() => {
+            getBlogAll();
+          }, 500);
         }
       } else {
         obj.hasIntersected = false;
@@ -313,6 +310,7 @@ emitter.on("on-button-click", (e) => {
     console.log(obj.keyword);
     obj.num = 0;
     obj.bloglist = [];
+    window.removeEventListener("scroll", handleScroll);
     axios
       .post(
         "/blog/getAll",
@@ -323,7 +321,7 @@ emitter.on("on-button-click", (e) => {
         { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
       )
       .then((res) => {
-        console.log(res);
+        window.addEventListener("scroll", handleScroll);
         obj.bloglist = res.data.data;
       });
   }
@@ -380,7 +378,7 @@ function forward(posts, forwardContent) {
       content: posts.content,
     })
     .then((res) => {
-      console.log(res);
+      window.location.reload();
     });
 }
 function shareQQ() {

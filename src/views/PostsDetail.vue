@@ -242,7 +242,8 @@ function forward(posts, forwardContent) {
       content: posts.content,
     })
     .then((res) => {
-      console.log(res);
+      console.log(1111);
+      window.location.reload();
     });
 }
 function shareQQ() {
