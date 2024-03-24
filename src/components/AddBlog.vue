@@ -403,16 +403,16 @@ const submitForm = () => {
   if (!obj.isShow) {
     document.querySelector(".add_blog_box").classList.add("run");
     document.querySelector(".add_blog_box").classList.remove("runway");
-
     obj.isShow = true;
-  } else {
     axios.get("/blog/createBlog").then((res) => {
       obj.bid = res.data.data;
+      console.log(obj.bid);
       let file = vFormRef.value.getWidgetRef("fileupload28013");
       file.setUploadData("bid", obj.bid);
       let video = vFormRef.value.getWidgetRef("fileupload86098");
       video.setUploadData("bid", obj.bid);
     });
+  } else {
     vFormRef.value.getFormData().then((formData) => {
       axios
         .post("/blog/addBlog", {

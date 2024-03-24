@@ -183,7 +183,9 @@ const obj = reactive({
 // });
 onBeforeMount(() => {
   if (route.query.bid) {
+    console.log(route.query.bid);
     axios.get("/blog/getPosts/" + route.query.bid).then((res) => {
+      console.log(res.data);
       obj.blog = res.data.data;
       console.log(obj.blog);
       window.scrollTo({

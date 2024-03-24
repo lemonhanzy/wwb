@@ -3,8 +3,10 @@
     <!-- 发布帖子盒子 -->
     <add-blog></add-blog>
     <!-- 遍历帖子 -->
-    <div
-      class="post-container"
+    <!-- <div class="infinite-list-wrapper" style="overflow: auto"> -->
+      <ul v-infinite-scroll="load" class="infinite-list" :infinite-scroll-disabled="disabled" infinite-scroll-distance="50px" style="overflow: auto">
+      <li
+      class="infinite-list-item post-container"
       v-for="(item, index) in obj.bloglist"
       :key="item.bid"
       :id="item.bid + '_posts'"
@@ -17,7 +19,7 @@
         >
           <el-avatar
             :size="50"
-            :src="'http://localhost:8080' + item.user.headImage"
+            :src="'http://localhost:8080/' + item.user.headImage"
           />
         </div>
         <div class="user-info">
@@ -101,7 +103,6 @@
             >({{ item.comments.length }})</span
           ></span
         >
-
         <el-popover placement="top" :width="160">
           <p>分享至？</p>
           <div style="width: 150px; display: flex">
@@ -122,7 +123,7 @@
                 style="vertical-align: middle"
               />微信
             </div>
-            <div @click="forward(item, 'test转发')" style="cursor: pointer">
+            <div @click="forward(item, '转发动态')" style="cursor: pointer">
               <img
                 src="../img/动态.png"
                 width="20px"
@@ -159,7 +160,9 @@
           发布
         </button>
       </div>
-    </div>
+    </li>
+  </ul>
+    <!-- </div> -->
     <el-table
       v-loading="obj.loading"
       style="width: 97.5%; margin: 10px; border-radius: 10px"
@@ -178,6 +181,7 @@ import {
   onBeforeUnmount,
   watch,
   watchEffect,
+  ref,
 } from "vue";
 import dayjs from "dayjs";
 import { useRouter, useRoute } from "vue-router";
@@ -196,8 +200,18 @@ const obj = reactive({
   loves: [],
   isBg_black: false,
   isIssue: false,
+  isfinish:false
 });
-
+const loading = ref(false)
+const noMore = obj.isfinish
+const disabled = computed(() => loading.value || obj.isfinish)
+function load () {
+  loading.value = true
+  setTimeout(() => {
+    getBlogAll()
+    loading.value = false
+  }, 2500)
+}
 function getBlogAll() {
   axios
     .post(
@@ -212,53 +226,55 @@ function getBlogAll() {
       obj.num += 3;
       obj.bloglist.push(...res.data.data);
       console.log(obj.bloglist);
-      if (res.data.data.length == 0) {
+      if (res.data.data.length < 3) {
+        obj.isfinish=true
         obj.flag = true;
         obj.loading = false;
         obj.msg = "没有更多了";
         console.log("结束");
-        window.removeEventListener("scroll", handleScroll);
+        // window.removeEventListener("scroll", handleScroll);
       } else {
         obj.flag = false;
+        obj.isfinish=false
         console.log("继续");
       }
     });
 }
-onBeforeUnmount(() => {
-  window.removeEventListener("scroll", handleScroll);
-});
-function handleScroll(e) {
-  let lazyLoad = document.getElementById(
-    `${obj.bloglist[obj.bloglist.length - 1].bid}_posts`
-  );
-  const options = {
-    root: null, // 根元素，如果为 null 则为 viewport
-    rootMargin: "0px",
-    threshold: 0.8,
-  };
-  const io = new IntersectionObserver((entries, observer) => {
-    entries.forEach((entry) => {
-      if (entry.isIntersecting) {
-        // 目标元素进入视口时的处理逻辑
-        if (!obj.hasIntersected) {
-          obj.hasIntersected = true;
-          console.log(1);
-          setTimeout(() => {
-            getBlogAll();
-          }, 500);
-        }
-      } else {
-        obj.hasIntersected = false;
-      }
-    });
-  }, options); // 将需要观察的目标元素传入 IntersectionObserver 实例
-  io.observe(lazyLoad);
-}
+// onBeforeUnmount(() => {
+//   window.removeEventListener("scroll", handleScroll);
+// });
+// function handleScroll(e) {
+//   let lazyLoad = document.getElementById(
+//     `${obj.bloglist[obj.bloglist.length - 1].bid}_posts`
+//   );
+//   const options = {
+//     root: null, // 根元素，如果为 null 则为 viewport
+//     rootMargin: "0px",
+//     threshold: 0.8,
+//   };
+//   const io = new IntersectionObserver((entries, observer) => {
+//     entries.forEach((entry) => {
+//       if (entry.isIntersecting) {
+//         // 目标元素进入视口时的处理逻辑
+//         if (!obj.hasIntersected) {
+//           obj.hasIntersected = true;
+//           console.log(1);
+//           setTimeout(() => {
+//             getBlogAll();
+//           }, 500);
+//         }
+//       } else {
+//         obj.hasIntersected = false;
+//       }
+//     });
+//   }, options); // 将需要观察的目标元素传入 IntersectionObserver 实例
+//   io.observe(lazyLoad);
+// }
 
 //加载
 onMounted(() => {
   getBlogAll();
-  window.addEventListener("scroll", handleScroll);
+  // window.addEventListener("scroll", handleScroll);
   axios.get("/love/getLove").then((res) => {
     obj.loves = res.data.data;
   });
@@ -310,8 +326,12 @@ emitter.on("on-button-click", (e) => {
     console.log(obj.keyword);
     obj.num = 0;
     obj.bloglist = [];
-    window.removeEventListener("scroll", handleScroll);
-    axios
+    // window.removeEventListener("scroll", handleScroll);
+    if(obj.keyword==1){
+      console.log(11111);
+      window.location.reload()
+    }else{
+      axios
       .post(
         "/blog/getAll",
         {
@@ -321,9 +341,11 @@ emitter.on("on-button-click", (e) => {
         { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
       )
       .then((res) => {
-        window.addEventListener("scroll", handleScroll);
+        // window.addEventListener("scroll", handleScroll);
         obj.bloglist = res.data.data;
       });
+    }
+    
   }
 });
 function checkImg() {
@@ -445,6 +467,7 @@ function shareQQ() {
   }
 }
 .post-container {
+  box-sizing: border-box;
   padding: 10px;
   margin-bottom: 20px;
   border-radius: 10px;

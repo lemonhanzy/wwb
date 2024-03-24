@@ -11,6 +11,7 @@
               type="text"
               placeholder="请输入您要搜索的内容..."
               v-model="obj.keyword"
+              @keyup.enter="sendKeyword"
             />
             <button @click="sendKeyword">
               <el-icon size="20"><Search /></el-icon>
@@ -80,9 +81,14 @@ const obj = reactive({
 onMounted(() => {
   axios.get("/user/function/getUser/").then((res) => {
     obj.user = res.data.data;
-    obj.user.headImage = "http://localhost:8080" + obj.user.headImage;
+    obj.user.headImage = "http://localhost:8080/" + obj.user.headImage;
   });
 });
+function vip(){
+  axios.post("/user/function/vip").then(res=>{
+    window.location.href =res.data
+  })
+}
 function goPersonal(id) {
   router
     .push({

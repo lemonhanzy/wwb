@@ -55,6 +55,9 @@ function goPostsDetail(bid) {
   font-size: 18px;
   font-weight: bold;
   color: #333;
+  white-space: nowrap; /* 禁止换行 */
+  overflow: hidden; /* 超出宽度隐藏 */
+  text-overflow: ellipsis; /* 超出部分用省略号表示 */
 }
 
 .post-details {

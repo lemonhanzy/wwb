@@ -9,7 +9,6 @@
       </div>
       <div class="personal">
         <el-avatar class="headImg" :size="150" :src="obj.headImage" />
-        {{ obj.headImage }}
         <!-- <span :class="['username', item.user.isVip ? 'vip' : '']">姓名</span> -->
         <span class="username">{{ obj.user.username }}</span>
         <el-button
@@ -431,17 +430,17 @@ onMounted(() => {
     if (res.data.code === 220) {
       obj.myFlag = true;
       obj.user = res.data.data;
-      obj.headImage = "http://localhost:8080" + obj.user.headImage;
+      obj.headImage = "http://localhost:8080/" + obj.user.headImage;
     } else {
       obj.myFlag = false;
       obj.user = res.data.data;
-      obj.headImage = "http://localhost:8080" + obj.user.headImage;
+      obj.headImage = "http://localhost:8080/" + obj.user.headImage;
     }
   });
   axios.get("/friend/getAll/" + obj.uid).then((res) => {
     obj.friends = res.data.data;
     obj.friends.forEach((a) => {
-      a.user.headImage = "http://localhost:8080" + a.user.headImage;
+      a.user.headImage = "http://localhost:8080/" + a.user.headImage;
     });
   });
   axios.get("/friend/isFriend/" + obj.uid).then((res) => {
